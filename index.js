@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config()
+require("dotenv").config();
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
@@ -19,35 +19,50 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
-async function run(){
-    try{
-        // appointment options collection
-        const AppointmentOptions = client.db("doctorsPortal").collection("appointmentOptions")
+async function run() {
+  try {
+    // appointment options collection
+    const AppointmentOptions = client
+      .db("doctorsPortal")
+      .collection("appointmentOptions");
 
-        // bookings collection
-        const Bookings = client.db("doctorsPortal").collection("bookingCollections")
+    // bookings collection
+    const Bookings = client
+      .db("doctorsPortal")
+      .collection("bookingCollections");
 
-        // get all appointments options
-        app.get("/appointment-options", async(req, res) => {
-            const query = {};
-            const cursor = AppointmentOptions.find(query);
-            const result = await cursor.toArray()
-            res.send({result})
-        })
+    // get all appointments options
+    app.get("/appointment-options", async (req, res) => {
+      const date = req.query.date;
+      const query = {};
+      const cursor = AppointmentOptions.find(query);
+      const result = await cursor.toArray();
+      const bookingQuery = { appointmentDate: date };
+      const alreadyBooked = await Bookings.find(bookingQuery).toArray();
+      result.forEach((option) => {
+        const bookedOption = alreadyBooked.filter(
+          (book) => book.treatment === option.name
+        );
+        const bookedSlots = bookedOption.map((book) => book.slot);
+        const remainingSlots = option.slots.filter(
+          (slot) => !bookedSlots.includes(slot)
+        );
+        option.slots = remainingSlots;
+      });
+      res.send({ result });
+    });
 
-        // post booking 
-        app.post("/bookings", async(req, res) => {
-            const booking = req.body;
-            const result = await Bookings.insertOne(booking)
-            res.send({result})
-        })
-    }
-    finally{
-
-    }
+    // post booking
+    app.post("/bookings", async (req, res) => {
+      const booking = req.body;
+      const result = await Bookings.insertOne(booking);
+      res.send({ result });
+    });
+  } finally {
+  }
 }
 
-run().catch(console.log)
+run().catch(console.log);
 
 // default api
 app.get("/", (req, res) => {
