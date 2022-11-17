@@ -31,6 +31,11 @@ async function run() {
       .db("doctorsPortal")
       .collection("bookingCollections");
 
+    // users collection
+    const Users = client
+      .db("doctorsPortal")
+      .collection("usersCollection");
+
     // get all appointments options
     app.get("/appointment-options", async (req, res) => {
       const date = req.query.date;
@@ -74,6 +79,14 @@ async function run() {
       const email = req.query.email;
       const query = {email: email}
       const result = await Bookings.find(query).toArray()
+      res.send({result})
+    })
+
+    // post user 
+    app.post("/users", async(req, res) => {
+      const user = req.body;
+      console.log(user);
+      const result = await Users.insertOne(user)
       res.send({result})
     })
   } finally {
