@@ -68,6 +68,14 @@ async function run() {
       const result = await Bookings.insertOne(booking);
       res.send({ result });
     });
+
+    // get booking by specific email
+    app.get("/bookings", async(req, res) => {
+      const email = req.query.email;
+      const query = {email: email}
+      const result = await Bookings.find(query).toArray()
+      res.send({result})
+    })
   } finally {
   }
 }
