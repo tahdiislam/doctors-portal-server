@@ -84,6 +84,13 @@ async function run() {
       res.send({ result });
     });
 
+    // get all users
+    app.get("/users", async(req, res) => {
+      const query = {};
+      const users = await Users.find(query).toArray()
+      res.send({users})
+    })
+
     // post booking
     app.post("/bookings", async (req, res) => {
       const booking = req.body;
