@@ -20,6 +20,22 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+// custom middle wire form jwt verify
+function verifyJWT(req, res, next){
+  const authHeader = req.headers.authorization;
+  if(!authHeader){
+    return res.status(401).send({message: "unauthorized access"})
+  }
+  const token = authHeader.split(" ")[1]
+  jwt.verify(token, process.env.TOKEN_SECRET, function(err, decoded){
+    if(err){
+      return res.status(403).send({message: "forbidden access"})
+    }
+    req.decoded = decoded;
+    next()
+  })
+}
+
 async function run() {
   try {
     // appointment options collection
@@ -86,8 +102,12 @@ async function run() {
     });
 
     // get booking by specific email
-    app.get("/bookings", async (req, res) => {
+    app.get("/bookings", verifyJWT, async (req, res) => {
+      const decodedEmail = req.decoded.email;
       const email = req.query.email;
+      if(decodedEmail !== email){
+        return res.status(401).send({message: "unauthorized access"})
+      }
       const query = { email: email };
       const result = await Bookings.find(query).toArray();
       res.send({ result });
