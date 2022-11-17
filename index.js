@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const app = express();
@@ -32,9 +33,19 @@ async function run() {
       .collection("bookingCollections");
 
     // users collection
-    const Users = client
-      .db("doctorsPortal")
-      .collection("usersCollection");
+    const Users = client.db("doctorsPortal").collection("usersCollection");
+
+    // get jwt 
+    app.get("/jwt", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const user = await Users.findOne(query)
+      if(user){
+        const token = jwt.sign({email}, process.env.TOKEN_SECRET, {expiresIn: "1h"})
+        return res.send({token})
+      }
+      return res.send({token: ""})
+    });
 
     // get all appointments options
     app.get("/appointment-options", async (req, res) => {
@@ -75,20 +86,20 @@ async function run() {
     });
 
     // get booking by specific email
-    app.get("/bookings", async(req, res) => {
+    app.get("/bookings", async (req, res) => {
       const email = req.query.email;
-      const query = {email: email}
-      const result = await Bookings.find(query).toArray()
-      res.send({result})
-    })
+      const query = { email: email };
+      const result = await Bookings.find(query).toArray();
+      res.send({ result });
+    });
 
-    // post user 
-    app.post("/users", async(req, res) => {
+    // post user
+    app.post("/users", async (req, res) => {
       const user = req.body;
       console.log(user);
-      const result = await Users.insertOne(user)
-      res.send({result})
-    })
+      const result = await Users.insertOne(user);
+      res.send({ result });
+    });
   } finally {
   }
 }
