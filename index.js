@@ -93,11 +93,19 @@ async function run() {
       res.send({ users });
     });
 
+    // check user is admin
+    app.get("/users/admin/:email", async(req, res) => {
+      const email = req.params.email;
+      const query = {email: email};
+      const user = await Users.findOne(query)
+      res.send({isAdmin: user.role === "admin"})
+    })
+
     // make user admin
     app.put("/users/admin/:id", verifyJWT, async (req, res) => {
       const decodedEmail = req.decoded.email;
       const query = {email: decodedEmail}
-      const user = await Users.find(query)
+      const user = await Users.findOne(query)
       if(user?.role !== "admin"){
         return res.status(403).send({message: "forbidden access"})
       }
