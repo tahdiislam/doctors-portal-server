@@ -49,9 +49,7 @@ async function run() {
       .collection("bookingCollections");
 
     // doctor's collection
-    const Doctors = client
-      .db("doctorsPortal")
-      .collection("doctorsCollection");
+    const Doctors = client.db("doctorsPortal").collection("doctorsCollection");
 
     // users collection
     const Users = client.db("doctorsPortal").collection("usersCollection");
@@ -107,6 +105,13 @@ async function run() {
       res.send({ users });
     });
 
+    // get all doctors
+    app.get("/doctors", verifyJWT, async (req, res) => {
+      const query = {};
+      const doctors = await Doctors.find(query).toArray();
+      res.send({ doctors });
+    });
+
     // check user is admin
     app.get("/users/admin/:email", async (req, res) => {
       const email = req.params.email;
@@ -136,10 +141,10 @@ async function run() {
     });
 
     // post doctor's
-    app.post("/doctors", verifyJWT, async(req, res) => {
+    app.post("/doctors", verifyJWT, async (req, res) => {
       const doctor = req.body;
-      const result = await Doctors.insertOne(doctor)
-      res.send({result})
+      const result = await Doctors.insertOne(doctor);
+      res.send({ result });
     });
 
     // post booking
