@@ -20,7 +20,7 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
-// custom middle wire form jwt verify
+// custom middleware form jwt verify
 function verifyJWT(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
@@ -47,6 +47,11 @@ async function run() {
     const Bookings = client
       .db("doctorsPortal")
       .collection("bookingCollections");
+
+    // doctor's collection
+    const Doctors = client
+      .db("doctorsPortal")
+      .collection("doctorsCollection");
 
     // users collection
     const Users = client.db("doctorsPortal").collection("usersCollection");
@@ -86,6 +91,15 @@ async function run() {
       res.send({ result });
     });
 
+    // get appointment specialty
+    app.get("/appointment-specialty", async (req, res) => {
+      const query = {};
+      const result = await AppointmentOptions.find(query)
+        .project({ name: 1 })
+        .toArray();
+      res.send({ result });
+    });
+
     // get all users
     app.get("/users", async (req, res) => {
       const query = {};
@@ -94,27 +108,27 @@ async function run() {
     });
 
     // check user is admin
-    app.get("/users/admin/:email", async(req, res) => {
+    app.get("/users/admin/:email", async (req, res) => {
       const email = req.params.email;
-      const query = {email: email};
-      const user = await Users.findOne(query)
-      res.send({isAdmin: user.role === "admin"})
-    })
+      const query = { email: email };
+      const user = await Users.findOne(query);
+      res.send({ isAdmin: user.role === "admin" });
+    });
 
     // make user admin
     app.put("/users/admin/:id", verifyJWT, async (req, res) => {
       const decodedEmail = req.decoded.email;
-      const query = {email: decodedEmail}
-      const user = await Users.findOne(query)
-      if(user?.role !== "admin"){
-        return res.status(403).send({message: "forbidden access"})
+      const query = { email: decodedEmail };
+      const user = await Users.findOne(query);
+      if (user?.role !== "admin") {
+        return res.status(403).send({ message: "forbidden access" });
       }
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
       const updateUser = {
         $set: {
           role: "admin",
-        }
+        },
       };
       const options = { upsert: true };
       const result = await Users.updateOne(filter, updateUser, options);
