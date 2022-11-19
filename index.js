@@ -54,6 +54,17 @@ async function run() {
     // users collection
     const Users = client.db("doctorsPortal").collection("usersCollection");
 
+    // custom middleware
+    const verifyAdmin = async (req, res, next) => {
+      const decodedEmail = req.decoded.email;
+      const filter = { email: decodedEmail };
+      const user = await Users.findOne(filter);
+      if (user?.role !== "admin") {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      next()
+    };
+
     // get jwt
     app.get("/jwt", async (req, res) => {
       const email = req.query.email;
@@ -183,6 +194,14 @@ async function run() {
       const result = await Users.insertOne(user);
       res.send({ result });
     });
+
+    // delete doctor
+    app.delete("/doctors/:id", verifyJWT, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await Doctors.deleteOne(query);
+      res.send({ result });
+    });
   } finally {
   }
 }
@@ -195,5 +214,5 @@ app.get("/", (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Doctors portal is runnign on port ${port}`);
+  console.log(`Doctors portal is running on port ${port}`);
 });
