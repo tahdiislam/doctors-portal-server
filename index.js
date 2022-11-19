@@ -135,6 +135,13 @@ async function run() {
       res.send({ result });
     });
 
+    // post doctor's
+    app.post("/doctors", verifyJWT, async(req, res) => {
+      const doctor = req.body;
+      const result = await Doctors.insertOne(doctor)
+      res.send({result})
+    });
+
     // post booking
     app.post("/bookings", async (req, res) => {
       const booking = req.body;
