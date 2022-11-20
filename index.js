@@ -187,6 +187,27 @@ async function run() {
       res.send({ result });
     });
 
+    // get single booking
+    app.get("/bookings/:id", async(req, res) => {
+      const id = req.params.id;
+      const query = {_id: ObjectId(id)}
+      const result = await Bookings.findOne(query)
+      res.send({result})
+    })
+
+    // add new field in appointment collection
+    // app.get("/pricefield", async(req, res) => {
+    //   const query = {};
+    //   const option = {upsert: true};
+    //   const updateField = {
+    //     $set: {
+    //       price: 99,
+    //     }
+    //   };
+    //   const result = await AppointmentOptions.updateMany(query, updateField, option)
+    //   res.send({result})
+    // })
+
     // post user
     app.post("/users", async (req, res) => {
       const user = req.body;
