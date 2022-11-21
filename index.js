@@ -67,7 +67,7 @@ async function run() {
     };
 
     //stipe
-    app.post("/create-payment-intent", async (req, res) => {
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
       const booking = req.body;
       const price = booking.price;
       const amount = price * 100;
