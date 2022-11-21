@@ -52,6 +52,9 @@ async function run() {
     // doctor's collection
     const Doctors = client.db("doctorsPortal").collection("doctorsCollection");
 
+    // payment collection
+    const Payments = client.db("doctorsPortal").collection("paymentCollection");
+
     // users collection
     const Users = client.db("doctorsPortal").collection("usersCollection");
 
@@ -75,7 +78,7 @@ async function run() {
       const paymentIntent = await stripe.paymentIntents.create({
         currency: "usd",
         amount: amount,
-        "payment_method_types": ["card"],
+        payment_method_types: ["card"],
       });
       res.send({
         clientSecret: paymentIntent.client_secret,
@@ -213,23 +216,39 @@ async function run() {
     });
 
     // add new field in appointment collection
-    // app.get("/pricefield", async(req, res) => {
+    // app.get("/bookingfield", async (req, res) => {
     //   const query = {};
-    //   const option = {upsert: true};
+    //   const option = { upsert: true };
     //   const updateField = {
     //     $set: {
     //       price: 99,
-    //     }
+    //     },
     //   };
-    //   const result = await AppointmentOptions.updateMany(query, updateField, option)
-    //   res.send({result})
-    // })
+    //   const result = await Bookings.updateMany(query, updateField, option);
+    //   res.send({ result });
+    // });
 
     // post user
     app.post("/users", async (req, res) => {
       const user = req.body;
       console.log(user);
       const result = await Users.insertOne(user);
+      res.send({ result });
+    });
+
+    // post payment
+    app.post("/payments", verifyJWT, async (req, res) => {
+      const payment = req.body;
+      const bookingId = payment.bookingId;
+      console.log(payment);
+      const result = await Payments.insertOne(payment);
+      const query = { _id: ObjectId(bookingId) };
+      const updateField = {
+        $set: {
+          paid: true,
+        },
+      };
+      const updateBooking = await Bookings.updateOne(query, updateField);
       res.send({ result });
     });
 
